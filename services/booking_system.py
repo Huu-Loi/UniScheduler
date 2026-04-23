@@ -185,7 +185,7 @@ class BookingSystem:
 
         except Exception as e:
             print(f" Error: {e}")
-    #Delete booking from the 
+    #Delete booking from the system
     def delete_booking(self):
         """Delete an existing booking with safety checks."""
         try:
@@ -207,7 +207,7 @@ class BookingSystem:
             if not booking:
                 raise ValueError(f"Booking ID '{booking_id}' not found!")
 
-            # Confirmation
+            # Confirmation ( to make sure you want delete)
             confirm = input(f"Are you sure you want to delete booking '{booking_id}'? (y/n): ").strip().lower()
             if confirm != 'y':
                 print("Deletion cancelled.")
