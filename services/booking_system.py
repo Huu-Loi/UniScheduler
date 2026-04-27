@@ -18,18 +18,20 @@ class BookingSystem:
 
     # ============ PERSISTENCE ===============
     def save_data(self):
-        # Save all data to JSON files (Robust Data Persistence)
-        resources_data = [r.to_dict() for r in self.resources]
-        with open(f"{self.data_dir}/resources.json", "w", encoding="utf-8") as f:
-            json.dump(resources_data, f, indent=2, ensure_ascii=False)
+        try:
+            resources_data = [r.to_dict() for r in self.resources]
+            with open(f"{self.data_dir}/resources.json", "w", encoding="utf-8") as f:
+                json.dump(resources_data, f, indent=2, ensure_ascii=False)
 
-        bookings_data = [b.to_dict() for b in self.bookings]
-        with open(f"{self.data_dir}/bookings.json", "w", encoding="utf-8") as f:
-            json.dump(bookings_data, f, indent=2, ensure_ascii=False)
+            bookings_data = [b.to_dict() for b in self.bookings]
+            with open(f"{self.data_dir}/bookings.json", "w", encoding="utf-8") as f:
+                json.dump(bookings_data, f, indent=2, ensure_ascii=False)
 
-        users_data = [u.to_dict() for u in self.users.values()]
-        with open(f"{self.data_dir}/users.json", "w", encoding="utf-8") as f:
-            json.dump(users_data, f, indent=2, ensure_ascii=False)
+            users_data = [u.to_dict() for u in self.users.values()]
+            with open(f"{self.data_dir}/users.json", "w", encoding="utf-8") as f:
+                json.dump(users_data, f, indent=2, ensure_ascii=False)
+        except IOError as e:
+            print(f"CRITICAL: Failed to save data — {e}")
 
     def load_data(self):
         # Load all data from JSON files with full defensive handling and warnings
@@ -168,7 +170,7 @@ class BookingSystem:
                 raise ValueError(f"User ID '{user_id}' not found!")
 
             # Safety check: cannot delete user who has bookings
-            has_bookings = any(b.user.user_id == user_id for b in self.bookings)
+            has_bookings = any(b.user.user_id == user_id and b.status != "cancelled" for b in self.bookings)
             if has_bookings:
                 raise ValueError(" Cannot delete this user: They have active bookings!")
 
@@ -313,7 +315,8 @@ class BookingSystem:
             booking = next((b for b in self.bookings if b.booking_id == booking_id), None)
             if not booking:
                 raise ValueError(f"Booking ID '{booking_id}' not found!")
-
+            if booking.status == "cancelled":
+                raise ValueError("Cannot edit a cancelled booking!")
             print(f"\nCurrent booking: {booking.time_slot} | Attendees: {booking.num_attendees}")
 
             what = input("What do you want to edit? (time / attendees): ").strip().lower()
@@ -374,8 +377,8 @@ class BookingSystem:
             raise ValueError("Time slot is not available!")
 
         # Check user weekly limit (proper full-week boundary)
-        today = datetime.now().date()
-        week_start = today - timedelta(days=today.weekday())
+        booking_date = start.date()
+        week_start = booking_date - timedelta(days=booking_date.weekday())
         week_end = week_start + timedelta(days=7)
         bookings_this_week = sum(
             1 for b in self.bookings
@@ -390,7 +393,8 @@ class BookingSystem:
             )
 
         # Create booking
-        booking_id = f"B{len(self.bookings) + 1:04d}"
+        existing_ids = [int(b.booking_id[1:]) for b in self.bookings] if self.bookings else [0]
+        booking_id = f"B{max(existing_ids) + 1:04d}"
         time_slot = TimeSlot(start, end)
         booking = Booking(booking_id, user, resource, time_slot, attendees)
 
@@ -432,23 +436,45 @@ class BookingSystem:
             if match:
                 results.append(r)
         return results
-
-    # ====================== CLI (user-friendly & robust) ======================
+    #Show time is available in timetable
     def show_timetable(self, resource_id: str, target_date: date):
-        # Displays ASCII timetable (meets HCI requirement)
-        print(f"\n=== TIMETABLE FOR {resource_id} - {target_date.strftime('%d/%m/%Y')} ===")
-        slots = self.find_available_slots(resource_id, target_date)
-        if not slots:
-            print("No available slots or resource not found.")
+        resource = next((r for r in self.resources if r.resource_id == resource_id), None)
+        if not resource:
+            print("Resource not found.")
             return
-        print("Time Slot          | Status")
-        print("-" * 45)
-        for slot in slots:
-            print(f"{slot} | AVAILABLE")
-    #View all resources from system
+
+        print(f"\n=== TIMETABLE FOR {resource_id} - {target_date.strftime('%d/%m/%Y')} ===")
+        print(f"{'Time Slot':<25} | {'Status':<12} | Booked By")
+        print("-" * 60)
+
+        current = datetime(target_date.year, target_date.month, target_date.day, 8)
+        end_day  = datetime(target_date.year, target_date.month, target_date.day, 20)
+
+        while current < end_day:
+            slot_end = current + timedelta(hours=1)
+            label = f"{current.strftime('%H:%M')} - {slot_end.strftime('%H:%M')}"
+
+            booked_by = None
+            for b in resource._bookings:
+                if b.status != "cancelled" and b.time_slot.start_time < slot_end and b.time_slot.end_time > current:
+                    booked_by = b.user.name
+                    break
+
+            if booked_by:
+                print(f"{label:<25} | {'BOOKED':<12} | {booked_by}")
+            else:
+                print(f"{label:<25} | {'AVAILABLE':<12} |")
+
+            current = slot_end
+    def _get_int_input(self, prompt: str) -> int:
+        while True:
+            try:
+                return int(input(prompt).strip())
+            except ValueError:
+                print("Please enter a valid integer!")
 
     def menu_loop(self):
-    # Main CLI loop - user-friendly interface
+        # Main CLI loop - user-friendly interface
         while True:
             print("\n" + "="*70)
             print("1.  Add Resource")
@@ -485,9 +511,9 @@ class BookingSystem:
                     typ = input("Type (LabSpace / MeetingRoom): ").strip().lower()
                     rid = input("Resource ID: ").strip()
                     loc = input("Location: ").strip()
-                    cap = int(input("Max Capacity: ").strip())
+                    cap = self._get_int_input("Max Capacity: ")
                     if typ == "labspace":
-                        pcs = int(input("Number of PCs: ").strip())
+                        pcs = self._get_int_input("Number of PCs: ")
                         os_t = input("OS Type: ").strip()
                         self.add_resource(LabSpace(rid, loc, cap, pcs, os_t))
                     else:
@@ -502,7 +528,7 @@ class BookingSystem:
                     date_str = input("Date (DD/MM/YYYY): ").strip()
                     start_str = input("Start time (HH:MM): ").strip()
                     end_str = input("End time (HH:MM): ").strip()
-                    att = int(input("Number of attendees: ").strip())
+                    att = self._get_int_input("Number of attendees: ")
                     # Robust datetime parsing
                     start = datetime.strptime(f"{date_str} {start_str}", "%d/%m/%Y %H:%M")
                     end = datetime.strptime(f"{date_str} {end_str}", "%d/%m/%Y %H:%M")
@@ -526,9 +552,15 @@ class BookingSystem:
                     has_proj = input("Has projector (y/n): ").strip()
                     crit = {}
                     if min_cap:
-                        crit["min_capacity"] = int(min_cap)
+                        try:
+                            crit["min_capacity"] = int(min_cap)
+                        except ValueError:
+                            print("Invalid capacity, skipping filter.")
                     if min_pcs:
-                        crit["min_pcs"] = int(min_pcs)
+                        try:
+                            crit["min_pcs"] = int(min_pcs)
+                        except ValueError:
+                            print("Invalid PC count, skipping filter.")
                     if has_proj:
                         crit["has_projector"] = has_proj.lower() == 'y'
                     results = self.search_resource(crit)
@@ -568,6 +600,7 @@ class BookingSystem:
                     print("Invalid choice! Please select 0-14.")
             except Exception as e:
                 print(f"Error: {e} (Please check your input and try again)")
+    #Easily to log out and log in , not to start the system again
     def run(self):
         while True:
             print("\n===== BOOKING SYSTEM =====")
