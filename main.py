@@ -1,7 +1,7 @@
 from services.booking_system import BookingSystem
-from ui.cli import run_cli
-# MAIN
-# Entry point of the program
+from ui.gui_app import BookingSystemGUI 
+import tkinter as tk
+
 if __name__ == "__main__":
-    system = BookingSystem()
-    system.run()
+    app = BookingSystemGUI() 
+    app.mainloop()

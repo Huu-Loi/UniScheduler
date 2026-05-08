@@ -103,42 +103,24 @@ class BookingSystem:
             print(f"Error loading bookings.json: {e}")
 
     # =========== CORE METHODS =============
-    def add_resource(self, resource: Resource):
-        self.resources.append(resource)
+    def add_resource_gui(self, resource_obj):
+        """Functions that allow the GUI to pass Resource objects directly."""
+        if any(r.resource_id == resource_obj.resource_id for r in self.resources):
+            raise ValueError(f"ID {resource_obj.resource_id} already existed!")
+        self.resources.append(resource_obj)
         self.save_data()
-        print(f"Resource {resource.resource_id} added successfully!")
     #Add user or staff in system
-    def add_user(self):
-        """Add a new User (Student or Staff) - Defensive & user-friendly"""
-        try:
-            print("\n--- Add New User ---")
-            user_type = input("User type (Student / Staff): ").strip().lower()
-            if user_type not in ["student", "staff"]:
-                raise ValueError("Invalid user type! Please enter 'Student' or 'Staff'.")
+    def add_user_gui(self, user_id, name, email, user_type):
+        if user_id in self.users:
+            raise ValueError(f"User ID '{user_id}' already existed!")
 
-            user_id = input("User ID (e.g. STU003 or STA003): ").strip().upper()
-            if user_id in self.users:
-                raise ValueError(f"User ID '{user_id}' already exists!")
+        if user_type.lower() == "student":
+            user = Student(user_id, name, email)
+        else:
+            user = Staff(user_id, name, email)
 
-            name = input("Full name: ").strip()
-            if not name:
-                raise ValueError("Name cannot be empty!")
-
-            email = input("Email address: ").strip()
-            if "@" not in email:
-                raise ValueError("Invalid email format!")
-
-            if user_type == "student":
-                user = Student(user_id, name, email)
-            else:
-                user = Staff(user_id, name, email)
-
-            self.users[user_id] = user
-            self.save_data()
-            print(f"User '{user_id}' ({user.role}) added successfully!")
-
-        except Exception as e:
-            print(f" Error: {e}")
+        self.users[user_id] = user
+        self.save_data()
     #See all user
     def view_all_users(self):
         """Display a list of all registered users in a clean, readable format.
@@ -157,200 +139,85 @@ class BookingSystem:
         print(f"Total users: {len(self.users)}")
         print("="*70)
     #Delete user from booking system
-    def delete_user(self):
-        """Delete a user from the system.
-        Prevents deletion if the user has any active bookings (safety check).
-        """
-        try:
-            # Show current users first
-            self.view_all_users()
+    def delete_user_by_id(self, user_id: str) -> None:
 
-            user_id = input("\nEnter User ID to delete: ").strip().upper()
-            if user_id not in self.users:
-                raise ValueError(f"User ID '{user_id}' not found!")
+        if user_id not in self.users:
+            raise ValueError(f"User ID '{user_id}' Doesn't exist!")
+        has_active = any(
+            b.user.user_id == user_id and b.status != "cancelled"
+            for b in self.bookings)
+        if has_active:
+            raise ValueError(
+                "Cannot delete: This user has active bookings!")
+        del self.users[user_id]
+        self.save_data()
 
-            # Safety check: cannot delete user who has bookings
-            has_bookings = any(b.user.user_id == user_id and b.status != "cancelled" for b in self.bookings)
-            if has_bookings:
-                raise ValueError(" Cannot delete this user: They have active bookings!")
-
-            # Confirmation
-            confirm = input(f" Are you sure you want to permanently delete user '{user_id}'? (y/n): ").strip().lower()
-            if confirm != 'y':
-                print("Deletion cancelled.")
-                return
-
-            # Delete user
-            del self.users[user_id]
-            self.save_data()
-            print(f"User '{user_id}' has been successfully deleted!")
-
-        except Exception as e:
-            print(f" Error: {e}")
     #Delete booking from the 
-    def delete_booking(self):
-        """Delete an existing booking with safety checks."""
-        try:
-            if not self.bookings:
-                print("No bookings to delete.")
-                return
-
-            # Show all bookings first
-            print("\n" + "="*70)
-            print("CURRENT BOOKINGS")
-            print("="*70)
-            for b in self.bookings:
-                print(f"{b.booking_id} | {b.user.name} | {b.resource.resource_id} | {b.time_slot}")
-            print("="*70)
-
-            booking_id = input("\nEnter Booking ID to delete (e.g. B0001): ").strip().upper()
-
-            booking = next((b for b in self.bookings if b.booking_id == booking_id), None)
-            if not booking:
-                raise ValueError(f"Booking ID '{booking_id}' not found!")
-
-            # Confirmation
-            confirm = input(f"Are you sure you want to delete booking '{booking_id}'? (y/n): ").strip().lower()
-            if confirm != 'y':
-                print("Deletion cancelled.")
-                return
-
-            # Remove from resource's booking list
-            booking.resource._bookings.remove(booking)
-            # Remove from main list
-            self.bookings.remove(booking)
-            self.save_data()
-            print(f"Booking '{booking_id}' has been successfully deleted!")
-
-        except Exception as e:
-            print(f"Error: {e}")
+    def delete_booking_by_id(self, booking_id: str) -> None:
+        booking = next(
+            (b for b in self.bookings if b.booking_id == booking_id), None)
+        if not booking:
+            raise ValueError(f"Booking ID '{booking_id}' Not found!")
+        booking.resource._bookings.remove(booking)
+        self.bookings.remove(booking)
+        self.save_data()
     #delect resource from system
-    def delete_resource(self):
-        """Delete a resource with safety check (cannot delete if it has bookings)."""
-        try:
-            if not self.resources:
-                print("No resources to delete.")
-                return
-
-            # Show all resources
-            self.view_all_resources() 
-            resource_id = input("\nEnter Resource ID to delete: ").strip().upper()
-
-            resource = next((r for r in self.resources if r.resource_id == resource_id), None)
-            if not resource:
-                raise ValueError(f"Resource ID '{resource_id}' not found!")
-
-            # Safety check
-            if resource._bookings:
-                raise ValueError("Cannot delete this resource: It has active bookings!")
-
-            confirm = input(f"Are you sure you want to permanently delete resource '{resource_id}'? (y/n): ").strip().lower()
-            if confirm != 'y':
-                print("Deletion cancelled.")
-                return
-
-            self.resources.remove(resource)
-            self.save_data()
-            print(f"Resource '{resource_id}' has been successfully deleted!")
-
-        except Exception as e:
-            print(f"Error: {e}")
+    def delete_resource_by_id(self, resource_id: str) -> None:
+        resource = next(
+            (r for r in self.resources
+             if r.resource_id == resource_id), None)
+        if not resource:
+            raise ValueError(
+                f"Resource ID '{resource_id}' not found!")
+        active = [b for b in resource._bookings
+                  if b.status != "cancelled"]
+        if active:
+            raise ValueError(
+                f"Cannot delete: still have resource  "
+                f"{len(active)} booking still working!")
+        self.resources.remove(resource)
+        self.save_data()
 
 
     #Cancel booking if anything wrong
-    def cancel_booking(self):
-        """Cancel a booking by changing its status to 'cancelled' (keeps history)."""
-        try:
-            if not self.bookings:
-                print("No bookings available.")
-                return
-
-            # Show all bookings
-            print("\n" + "="*70)
-            print("CURRENT BOOKINGS")
-            print("="*70)
-            for b in self.bookings:
-                print(f"{b.booking_id} | {b.user.name} | {b.resource.resource_id} | {b.time_slot} | Status: {b.status}")
-            print("="*70)
-
-            booking_id = input("\nEnter Booking ID to cancel (e.g. B0001): ").strip().upper()
-            booking = next((b for b in self.bookings if b.booking_id == booking_id), None)
-
-            if not booking:
-                raise ValueError(f"Booking ID '{booking_id}' not found!")
-
-            if booking.status == "cancelled":
-                print("This booking is already cancelled.")
-                return
-
-            confirm = input(f"Are you sure you want to CANCEL booking '{booking_id}'? (y/n): ").strip().lower()
-            if confirm != 'y':
-                print("Cancelled operation.")
-                return
-
-            booking.status = "cancelled"
-            self.save_data()
-            print(f"Booking '{booking_id}' has been successfully CANCELLED!")
-
-        except Exception as e:
-            print(f"Error: {e}")
+    def cancel_booking_by_id(self, booking_id: str) -> None:
+        """Update: Cancel booking by ID — for GUI use (no input() required)."""
+        booking = next(
+            (b for b in self.bookings if b.booking_id == booking_id), None)
+        if not booking:
+            raise ValueError(f"Booking ID '{booking_id}' Not found!")
+        if booking.status == "cancelled":
+            raise ValueError("This booking has been cancelled!")
+        booking.status = "cancelled"
+        self.save_data()
 
     #Edit booking from system
-    def edit_booking(self):
-        """Edit an existing booking (time slot or number of attendees) with re-validation."""
-        try:
-            if not self.bookings:
-                print("No bookings to edit.")
-                return
+    def edit_booking_by_id(self, booking_id: str,
+                           new_start: datetime,
+                           new_end: datetime,
+                           new_attendees: int) -> None:
+        booking = next(
+            (b for b in self.bookings if b.booking_id == booking_id), None)
+        if not booking:
+            raise ValueError(f"Booking ID '{booking_id}' Not found!")
+        if booking.status == "cancelled":
+            raise ValueError("Canceled bookings cannot be edited!")
+        if new_attendees > booking.resource.max_capacity:
+            raise ValueError(
+                f"Exceeding maximum capacity. "
+                f"({booking.resource.max_capacity})!")
 
-            # Show bookings
-            print("\n" + "="*70)
-            print("CURRENT BOOKINGS")
-            print("="*70)
-            for b in self.bookings:
-                print(f"{b.booking_id} | {b.user.name} | {b.resource.resource_id} | {b.time_slot}")
-            print("="*70)
+        booking.resource._bookings.remove(booking)
+        available = booking.resource.is_available(new_start, new_end)
+        booking.resource._bookings.append(booking)  
 
-            booking_id = input("\nEnter Booking ID to edit: ").strip().upper()
-            booking = next((b for b in self.bookings if b.booking_id == booking_id), None)
-            if not booking:
-                raise ValueError(f"Booking ID '{booking_id}' not found!")
-            if booking.status == "cancelled":
-                raise ValueError("Cannot edit a cancelled booking!")
-            print(f"\nCurrent booking: {booking.time_slot} | Attendees: {booking.num_attendees}")
+        if not available:
+            raise ValueError(
+                "The new time slot clashes with another booking!")
 
-            what = input("What do you want to edit? (time / attendees): ").strip().lower()
-
-            if what == "time":
-                date_str = input("New date (DD/MM/YYYY): ")
-                start_str = input("New start time (HH:MM): ")
-                end_str = input("New end time (HH:MM): ")
-                dt = datetime.strptime(date_str, "%d/%m/%Y")
-                new_start = dt.replace(hour=int(start_str[:2]), minute=int(start_str[3:]))
-                new_end = dt.replace(hour=int(end_str[:2]), minute=int(end_str[3:]))
-
-                # Re-validate
-                if not booking.resource.is_available(new_start, new_end):
-                    raise ValueError("New time slot conflicts with another booking!")
-
-                booking.time_slot = TimeSlot(new_start, new_end)
-                print("Time slot updated!")
-
-            elif what == "attendees":
-                new_att = int(input("New number of attendees: "))
-                if new_att > booking.resource.max_capacity:
-                    raise ValueError(f"Exceeds maximum capacity ({booking.resource.max_capacity})!")
-                booking.num_attendees = new_att
-                print("Number of attendees updated!")
-
-            else:
-                raise ValueError("Invalid choice!")
-
-            self.save_data()
-            print(f"Booking '{booking_id}' has been successfully updated!")
-
-        except Exception as e:
-            print(f"Error: {e}")
+        booking.time_slot   = TimeSlot(new_start, new_end)
+        booking.num_attendees = new_attendees
+        self.save_data()
 
     def detect_conflict(self, new_booking: Booking) -> bool:
         # Critical method for conflict detection (required by project brief)
@@ -406,21 +273,26 @@ class BookingSystem:
         self.save_data()
         print(f"Booking {booking_id} created successfully for {user.name}!")
 
-    def find_available_slots(self, resource_id: str, target_date: date) -> List[TimeSlot]:
-        # Returns list of available 1-hour slots (smart logic)
+    def find_available_slots_gui(self, resource_id, target_date):
+        """The function returns a list of empty slots for the GUI to display."""
         resource = next((r for r in self.resources if r.resource_id == resource_id), None)
         if not resource:
-            return []
-        # Operating hours: 08:00 - 20:00
-        slots = []
-        current = datetime(target_date.year, target_date.month, target_date.day, 8)
-        end_day = datetime(target_date.year, target_date.month, target_date.day, 20)
-        while current < end_day:
-            slot_end = current + timedelta(hours=1)
-            if resource.is_available(current, slot_end):
-                slots.append(TimeSlot(current, slot_end))
-            current = slot_end
-        return slots
+            raise ValueError("This room could not be found.")
+        
+        available = []
+        # For example the timetable that 09:00 to 17:00
+        for hour in range(9, 17):
+            start = datetime.combine(target_date, datetime.min.time()).replace(hour=hour)
+            end = start + timedelta(hours=1)
+            test_slot = TimeSlot(start, end, allow_past=True)
+            
+            #Check for scheduling conflicts
+            is_booked = any(b.resource.resource_id == resource_id and 
+                            b.time_slot.overlaps_with(test_slot) and 
+                            b.status == "confirmed" for b in self.bookings)
+            if not is_booked:
+                available.append(f"{hour}:00 - {hour+1}:00")
+        return available
 
     def search_resource(self, criteria: Dict) -> List[Resource]:
         # Advanced search with multiple filters
