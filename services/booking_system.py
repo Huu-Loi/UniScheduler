@@ -152,7 +152,7 @@ class BookingSystem:
         del self.users[user_id]
         self.save_data()
 
-    #Delete booking from the 
+    #Delete booking from the system
     def delete_booking_by_id(self, booking_id: str) -> None:
         booking = next(
             (b for b in self.bookings if b.booking_id == booking_id), None)

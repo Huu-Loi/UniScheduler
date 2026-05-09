@@ -303,24 +303,24 @@ class BookingSystemGUI(tk.Tk):
 
         nav_def = [
             ("OVERVIEW",  [
-                ("All Bookings",     "bookings",   self.show_bookings),
-                ("All Users",        "users",      self.show_users),
-                ( "All Resources",    "resources",  self.show_resources),
+                ("📋", "All Bookings",     "bookings",   self.show_bookings),
+                ("👥", "All Users",        "users",      self.show_users),
+                ("🏢", "All Resources",    "resources",  self.show_resources),
             ]),
             ("CREATE", [
-                ("Add Booking",      "add_booking",   self.show_add_booking),
-                ("Add User",         "add_user",      self.show_add_user),
-                ("Add Resource",     "add_resource",  self.show_add_resource),
+                ("✚", "Add Booking",      "add_booking",   self.show_add_booking),
+                ("✚", "Add User",         "add_user",      self.show_add_user),
+                ("✚", "Add Resource",     "add_resource",  self.show_add_resource),
             ]),
             ("MANAGE", [
-                ("Edit Booking",     "edit",      self.show_edit_booking),
-                ("Cancel Booking",   "cancel",    self.show_cancel_booking),
-                ("Delete",          "delete",    self.show_delete),
+                ("✎", "Edit Booking",     "edit",      self.show_edit_booking),
+                ("✕", "Cancel Booking",   "cancel",    self.show_cancel_booking),
+                ("⌦", "Delete",          "delete",    self.show_delete),
             ]),
             ("TOOLS", [
-                ("Search Resources", "search",    self.show_search),
-                ("Timetable",        "timetable", self.show_timetable),
-                ("Available Slots",  "slots",     self.show_slots),
+                ("⌕", "Search Resources", "search",    self.show_search),
+                ("▦", "Timetable",        "timetable", self.show_timetable),
+                ("◷", "Available Slots",  "slots",     self.show_slots),
             ]),
         ]
 
@@ -484,7 +484,7 @@ class BookingSystemGUI(tk.Tk):
     def show_bookings(self):
         self._clear("bookings")
         n = len(self.system.bookings)
-        self._page_header("All Bookings", f"{n} record(s)")
+        self._page_header(" 📋 All Bookings", f"{n} record(s)")
 
         if not self.system.bookings:
             self._empty_state("Don't have any booking yet.")
@@ -523,7 +523,7 @@ class BookingSystemGUI(tk.Tk):
     def show_resources(self):
         self._clear("resources")
         n = len(self.system.resources)
-        self._page_header(" All Resources", f"{n} resource(s)")
+        self._page_header("🏢 All Resources", f"{n} resource(s)")
 
         if not self.system.resources:
             self._empty_state("No resource yet.")
