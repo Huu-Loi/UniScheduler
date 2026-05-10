@@ -4,6 +4,7 @@
 **Module:** Programming 2 (Level 4)
 **Academic Year:** 2025/2026
 **Group:** 2
+<img width="12230" height="9800" alt="lam nhom cw2 drawio" src="https://github.com/user-attachments/assets/0336957c-6fa4-40cc-a07d-1f2c54722d42" />
 
 ### Team Members:
 * **Tran Nguyen Huu Loi (ID: 26749947)** - [Team Leader / Lead Developer - Backend Logic, GUI Implementation, Bug Fixing]
@@ -17,6 +18,7 @@ UniScheduler is an intelligent resource booking system designed for the Computer
 This system fully demonstrates Object-Oriented principles (Inheritance, Encapsulation, Polymorphism) and meets all mandatory technical requirements of the project brief.
 
 ---
+
 
 ## SYSTEM REQUIREMENTS
 * **Python 3.8 or higher**
