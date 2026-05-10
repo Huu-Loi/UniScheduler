@@ -83,6 +83,4 @@ The system strictly uses relative paths, ensuring it will run seamlessly on any 
 **For any questions or execution issues, please contact the Team Leader:**
 **Tran Nguyen Huu Loi** - 247480103b006@vanlanguni.vn
 
-
-*Thank you for using UniScheduler!*
 *Developed as part of Edge Hill University CIS1703 CW2*
