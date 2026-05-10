@@ -1,5 +1,3 @@
-
-
 import tkinter as tk
 from tkinter import ttk, messagebox, simpledialog
 from datetime import datetime, timedelta
@@ -18,20 +16,20 @@ from models.user import Student, Staff
 # Dictionary storing all UI colors used in the application
           
 C = {
-    "bg":         "#0d1b2a",   # main background – night blue
+    "bg":         "#132238",   # main background – night blue
     "sidebar":    "#091423",   # sidebar darker
     "card":       "#152235",   # card/panel
     "card_hover": "#1c2f45",   # card hover
     "row_alt":    "#111e2e",   # alternating rows
-    "border":     "#1e3550",   # border
+    "border":     "#29435c",   # border
     "accent":     "#38bdf8",   # light cyan – main highlight 
     "accent_dim": "#0ea5e9",   # accent darker(button hover)
     "green":      "#34d399",   # success / available
     "amber":      "#fbbf24",   # warning / pending
     "red":        "#f87171",   # error / booked
     "white":      "#e2eaf4",   # main text
-    "muted":      "#64829e",   # auxiliary letters
-    "separator":  "#1a3149",   # đường kẻ nhạt
+    "muted":      "#e0e1dd",   # auxiliary letters
+    "separator":  "#1a3149",   # auxiliary line
 }
 # Dictionary storing all fonts used in the GUI
 
