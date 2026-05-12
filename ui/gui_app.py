@@ -614,7 +614,7 @@ class BookingSystemGUI(tk.Tk):
     # ADD RESOURCE
     def show_add_resource(self):
         self._clear("add_resource")
-        self._page_header(" Add Resource")
+        self._page_header("✚  Add Resource")
         f = self._form_card()
 
         rid   = tk.StringVar()
@@ -625,7 +625,7 @@ class BookingSystemGUI(tk.Tk):
 
         # LabSpace-specific
         pcs  = tk.StringVar(value="10")
-        os_t = tk.StringVar(value="Windows")
+        os_t = tk.StringVar(value="Windows 11")
         # MeetingRoom-specific
         proj   = tk.StringVar(value="Yes")
         layout = tk.StringVar(value="Theatre")
@@ -633,12 +633,12 @@ class BookingSystemGUI(tk.Tk):
         self._field(f, "RESOURCE ID",   1, rid)
         self._field(f, "LOCATION",      2, loc)
         self._field(f, "MAX CAPACITY",  3, cap)
-        self._combo_field(f, "TYPE",    4, rtype,
-                          ["LabSpace", "MeetingRoom"])
+        self._combo_field(f, "TYPE",    4, rtype, ["LabSpace", "MeetingRoom"])
 
-        #  Dynamic extra rows 
+        # Dynamic extra rows
         extra_frame = tk.Frame(f, bg=C["card"])
         extra_frame.grid(row=9, column=0, columnspan=2, sticky="ew")
+        extra_frame.columnconfigure(0, weight=1)
 
         def refresh_extra(*_):
             for w in extra_frame.winfo_children():
@@ -647,8 +647,7 @@ class BookingSystemGUI(tk.Tk):
                 self._field(extra_frame, "NUMBER OF PCs", 0, pcs)
                 self._field(extra_frame, "OS TYPE",       1, os_t)
             else:
-                self._combo_field(extra_frame, "HAS PROJECTOR",
-                                  0, proj, ["Yes", "No"])
+                self._combo_field(extra_frame, "HAS PROJECTOR", 0, proj, ["Yes", "No"])
                 self._field(extra_frame, "SEATING LAYOUT", 1, layout)
 
         rtype.trace_add("write", refresh_extra)
@@ -656,20 +655,60 @@ class BookingSystemGUI(tk.Tk):
 
         def submit():
             try:
+                # Lấy và validate các trường
                 r_id = rid.get().strip().upper()
+                if not r_id:
+                    raise ValueError("Resource ID cannot be empty")
+                location = loc.get().strip()
+                if not location:
+                    raise ValueError("Location cannot be empty")
+                
+                try:
+                    capacity = int(cap.get().strip())
+                    if capacity <= 0:
+                        raise ValueError("Capacity must be positive")
+                except ValueError:
+                    raise ValueError("Capacity must be a valid positive integer")
+                
                 if rtype.get() == "LabSpace":
-                    res = LabSpace(r_id, loc.get().strip(), int(cap.get()),
-                                   int(pcs.get()), os_t.get().strip())
-                else:
-                    res = MeetingRoom(r_id, loc.get().strip(), int(cap.get()),
-                                      proj.get() == "Yes",
-                                      layout.get().strip())
-                self.system.add_resource(res)
-                messagebox.showinfo("Success",
-                                    f"Resource '{r_id}' has been added!")
+                    try:
+                        num_pcs = int(pcs.get().strip())
+                        if num_pcs <= 0:
+                            raise ValueError("Number of PCs must be positive")
+                        if num_pcs > capacity:
+                            raise ValueError("Number of PCs cannot exceed capacity")
+                    except ValueError:
+                        raise ValueError("Number of PCs must be a valid integer")
+                    os_type = os_t.get().strip()
+                    if not os_type:
+                        os_type = "Windows 11"
+                    res = LabSpace(r_id, location, capacity, num_pcs, os_type)
+                else:  # MeetingRoom
+                    has_proj = (proj.get() == "Yes")
+                    seat_layout = layout.get().strip()
+                    if not seat_layout:
+                        seat_layout = "Standard"
+                    res = MeetingRoom(r_id, location, capacity, has_proj, seat_layout)
+                
+                # Gọi đúng method backend
+                self.system.add_resource_gui(res)
+                
+                messagebox.showinfo("Success", f"Resource '{r_id}' has been added!")
                 self.show_resources()
+                
+                # Reset form
+                rid.set("")
+                loc.set("")
+                cap.set("")
+                pcs.set("10")
+                os_t.set("Windows 11")
+                proj.set("Yes")
+                layout.set("Theatre")
+                rtype.set("LabSpace")
+                info.config(text="")  # Xóa thông báo lỗi cũ
+                
             except Exception as e:
-                info.config(text=f" {e}")
+                info.config(text=f"⚠ {e}")
 
         self._submit_btn(f, "  ADD RESOURCE  ", submit, row=16)
 

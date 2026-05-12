@@ -1,0 +1,37 @@
+[
+  {
+    "user_id": "STU002",
+    "name": "Tran Thi B",
+    "email": "b@student.edgehill.ac.uk",
+    "role": "Student",
+    "type": "Student"
+  },
+  {
+    "user_id": "STA001",
+    "name": "Dr. Sarah Johnson",
+    "email": "sarah.j@edgehill.ac.uk",
+    "role": "Staff",
+    "type": "Staff"
+  },
+  {
+    "user_id": "STA002",
+    "name": "Prof. Michael Chen",
+    "email": "michael.c@edgehill.ac.uk",
+    "role": "Staff",
+    "type": "Staff"
+  },
+  {
+    "user_id": "STU005",
+    "name": "Huu Loi",
+    "email": "huuloi@gmail.com",
+    "role": "Student",
+    "type": "Student"
+  },
+  {
+    "user_id": "STU009",
+    "name": "HLoi",
+    "email": "132456@gmail.com",
+    "role": "Staff",
+    "type": "Staff"
+  }
+]
