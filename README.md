@@ -4,10 +4,11 @@
 **Module:** Programming 2 (Level 4)
 **Academic Year:** 2025/2026
 **Group:** 2
+<img width="12230" height="9800" alt="lam nhom cw2 drawio" src="https://github.com/user-attachments/assets/0336957c-6fa4-40cc-a07d-1f2c54722d42" />
 
 ### Team Members:
-* **Tran Nguyen Huu Loi (ID: 26749947)** - [Team Leader / Lead Developer - Backend Logic, GUI Implementation, Bug Fixing]
-* **Truong Gia Khanh (ID: 26749351)** - [Assistance]
+* **Tran Nguyen Huu Loi (ID: 26749947)** - [Team Leader / Lead Developer - Backend Logic, GUI Implementation, Bug Fixing / Presentation]
+* **Truong Gia Khanh (ID: 26749351)** - [Assistance / Presentation]
 
 ## DESCRIPTION
 UniScheduler is an intelligent resource booking system designed for the Computer Science department. It supports two types of resources (LabSpace and MeetingRoom), distinct user roles (Student/Staff), conflict detection, capacity checking, and weekly booking limits.
@@ -17,6 +18,7 @@ UniScheduler is an intelligent resource booking system designed for the Computer
 This system fully demonstrates Object-Oriented principles (Inheritance, Encapsulation, Polymorphism) and meets all mandatory technical requirements of the project brief.
 
 ---
+
 
 ## SYSTEM REQUIREMENTS
 * **Python 3.8 or higher**
@@ -83,7 +85,10 @@ The system strictly uses relative paths, ensuring it will run seamlessly on any 
 **For any questions or execution issues, please contact the Team Leader:**
 **Tran Nguyen Huu Loi** - 247480103b006@vanlanguni.vn
 
+---
+
 ============================================================
 *Thank you for using UniScheduler!*
 *Developed as part of Edge Hill University CIS1703 CW2*
 ============================================================
+
