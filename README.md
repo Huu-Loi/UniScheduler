@@ -87,8 +87,7 @@ The system strictly uses relative paths, ensuring it will run seamlessly on any 
 
 ---
 
-============================================================
+
 *Thank you for using UniScheduler!*
 *Developed as part of Edge Hill University CIS1703 CW2*
-============================================================
 
